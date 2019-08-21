@@ -20,9 +20,9 @@ library(plotly)
 
 ## Motivation
 
-Start with the data described in Efron and Tibshriani (1993, page 19). We have 15 paired observations of student LSAT scores and GPS. 
+Start with the data described in Efron and Tibshriani (1993, page 19). We have 15 paired observations of student LSAT scores and GPAs 
 
-We want to estimate the correlation between LSAT and GPAs. Summary statistics are the following:
+We want to estimate the correlation between LSAT and GPA scores. Summary statistics are the following:
 
 ```{r, echo = F}
 
@@ -60,7 +60,7 @@ The correlation turns out to be `r r`. For reasons we'll explore, we want to use
 Steps:
 
 1. Define a function that returns the statistic we want.
-2. Use the `boot` function to get `R` bootstrap replicates.
+2. Use the `boot` function to get `R` bootstrap replicates of the statistic.
 3. Use the `boot.ci` function to get the confidence intervals.
 
 ---
@@ -69,7 +69,7 @@ Our function:
 
 ```{r}
 
-get_r <- function(x, y, data, indices) {
+get_r <- function(data, indices, x, y) {
   
   d <- data[indices,]
   r <- round(as.numeric(cor(d[x], d[y])), 3)
@@ -88,7 +88,7 @@ Perform the bootstrapping and request CIs:
 
 set.seed(12345)
 
-boot_out <- boot(x = "lsat", y = "gpa", R = 500, data = tbl, 
+boot_out <- boot(data = tbl, x = "lsat", y = "gpa", R = 500,  
                  statistic = get_r)
 
 boot.ci(boot_out)
@@ -101,7 +101,7 @@ boot.ci(boot_out)
 
 set.seed(12345)
 
-boot_out <- boot(x = "lsat", y = "gpa", R = 500, data = tbl, 
+boot_out <- boot(data = tbl, x = "lsat", y = "gpa", R = 500,  
                  statistic = get_r)
 
 boot.ci(boot_out)
@@ -114,7 +114,7 @@ Questions:
 
 1. Why are there multiple CIs? How are they calculated?
 2. What are the bootstrap variances needed for studentized intervals?
-3. What does it mean that the calculations and intervals are on the same scale?
+3. What does it mean that the calculations and intervals are on the original scale?
 4. Why are some BCa intervals unstable?
 
 To understand this output, let's review statistical inference, confidence intervals, and the bootstrap.
@@ -151,19 +151,19 @@ $$
 
 We compare this to a $t$ distribution with $n-2 = 13$ degrees of freedom and easily find it to be significant.
 
-In words: If the null hypothesis were true, we repeatedly draw samples of size $n$, and calculate $r$ each time, the probability we would observe an estimate of $|r| = `r r`$ or larger is less than 5%. 
+In words: If the null hypothesis were true, we repeatedly draw samples of size $n$, and we calculate $r$ each time, then the probability we would observe an estimate of $|r| = `r r`$ or larger is less than 5%. 
 
 ## Confidence Intervals
 
 An important caveat. The formula for the standard error is only correct when $r = 0$. The closer we get to $\pm 1$, the less correct it is.
 
-We can see why by considering the 95% confidence interval for out estimate. The usual formula you see for a confidence interval is the estimate plus or minus the .975th quantile of the normal or $t$ distribution times the standard error.
+We can see why by considering the 95% confidence interval for out estimate. The usual formula you see for a confidence interval is the estimate plus or minus the 97.5th percentile of the normal or $t$ distribution times the standard error.
 
 $$
 \text{95% CI} = r \pm t_{df = 13} SE_r
 $$
 
-If we were to sample 15 students repeatedly from our population and calculate this confidence interval each time, the interval would include the true population value 95% of the time.
+If we were to sample 15 students repeatedly from our population and calculate this confidence interval each time, the interval should include the true population value 95% of the time.
 
 
 ---
@@ -202,8 +202,9 @@ If statistical inference is typically defined by repeated sampling from a popula
 1. Draw a random sample of size _N_ with replacement, which is the first _bootstrap sample_.
 2. Estimate the statistic of interest using the bootstrap sample.
 3. Draw a new random sample of size _N_ with replacement, which is the second bootstrap sample.
-4. Repeat $k$ times.
-5. Use the distribution of estimates across the $k$ bootstrap samples as the sampling distribution.
+4. Estimate the statistic of interest using the new bootstrap sample.
+5. Repeat $k$ times.
+6. Use the distribution of estimates across the $k$ bootstrap samples as the sampling distribution.
 
 ---
 
@@ -211,7 +212,7 @@ Note that the sampling is done with replacement.
 
 Most results from traditional statistics are based on the assumption of random sampling with replacement. 
 
-Usually, the population we sample from is large enough that we do not bother noting the with replacement part. 
+Usually, the population we sample from is large enough that we do not bother noting the "with replacement" part. 
 
 If the sample is large relative to the population, and sampling _without_ replacement is used, we would typically be advised to use a _finite population correction_. 
 
@@ -247,8 +248,8 @@ boot_se   <- round(sd(boot_out$t), 3)
 ```
 
 1. The distribution is definitely _not_ normal. 
-2. The mean estimate of $r$ across the 500 bootstrap samples is `r boot_mean`. The difference between the mean of the bootstrap estimates and the original sample estimate is the _bias_.
-3. The standard error is the standard deviation of the sampling distribution. Here the value is `r boot_se`, which is much smaller than our earlier estimate of `r r_se`. This is because `r r_se` was based on a formula that is only valid when $r = 0$.
+2. The mean estimate of $r$ across the 500 bootstrap samples is `r boot_mean`. The difference between the mean of the bootstrap estimates $(\mathbb{E}(r_b) = `r boot_mean`)$ and the original sample estimate $(r = `r r`)$ is the _bias_.
+3. The standard error is the standard deviation of the bootstrap sampling distribution. Here the value is `r boot_se`, which is much smaller than our earlier estimate of `r r_se`. This is because `r r_se` was based on a formula that is only valid when $r = 0$.
 
 ---
 
@@ -326,6 +327,7 @@ par_boot_tbl <- map_dfr(1:500, ~get_cor(.x, 15))
 The distribution of the correlation estimates across the 500 samples represents our parametric bootstrap sampling distribution. It looks like the following:
 
 ```{r, echo = F, warning = F}
+
 par_boot_tbl %>% 
   ggplot(aes(x = r)) + geom_histogram(bins = 25, color = "black", fill = "firebrick") +
   labs(x = "(Parametric) Bootstrap Estimate of r", y = "Frequency") +
@@ -337,7 +339,7 @@ par_boot_tbl %>%
 
 The average correlation across the 500 samples was `r round(mean(par_boot_tbl$r),3)`, and the standard deviation (our estimate of the standard error) was `r round(sd(par_boot_tbl$r),3)`. 
 
-This is smaller than our non-parametric bootstrap estimate of `r boot_se` reflective of the fact that our knowledge of the population distribution gives us more information that in turn reduces sampling variability. 
+This is smaller than our non-parametric bootstrap estimate of `r boot_se` reflective of the fact that our knowledge of the population distribution gives us more information. This in turn reduces sampling variability. 
 
 Of course, we often will not feel comfortable saying that the population distribution follows a well-defined shape, and hence we will typically default to the non-parametric version of the bootstrap.
 
@@ -349,25 +351,35 @@ $$
 \text{95% CI} = \theta \pm t_{df,1-\alpha/2} SE_{\theta}
 $$
 
-We saw that using the textbook standard error estimate for a correlation led us array because we ended up with an interval outside of the range of plausible values. 
+We saw that using the textbook standard error estimate for a correlation led us astray because we ended up with an interval outside of the range of plausible values. 
 
 There are a variety of alternative approaches to calculating confidence intervals based on the bootstrap. We'll walk through the ones most commonly output by software and discuss how they are calculated. 
-
-Not all will be relevant for a bounded statistic like a correlation, though they may still be useful for unbounded statistics for which there is no clear formula for the standard error.
 
 ## Standard Normal Interval
 
 The first approach simply takes the usual approach for calculating a confidence interval, using the normal distribution value of 1.96 instead of the corresponding percentile from the appropriate t distribution. 
 
-The only difference is that we use our bootstrap estimate of the standard error in the formula. In our example, we get
+There are two differences. First, we use our bootstrap estimate of the standard error in the formula. Second, we make an adjustment for the estimated bias, `r boot_bias`:
+
+In our example, we get
 
 $$
 \begin{align}
-\text{95% CI} &= r \pm 1.96 \times SE_r \\
-               &= `r r` \pm 1.96 \times `r boot_se` \\
-               &= [`r round(r-1.96*boot_se,3)`, `r round(r+1.96*boot_se,3)`]
+\text{95% CI} &= r - \text{bias} \pm 1.96 \times SE_r \\
+               &= `r r` + .005 \pm 1.96 \times `r boot_se` \\
+               &= [`r round(r- boot_bias - 1.96*boot_se,3)`, `r round(r - boot_bias + 1.96*boot_se,3)`]
 \end{align}
 $$
+
+---
+
+Check.
+
+```{r}
+
+boot.ci(boot_out, type = "norm")
+
+```
 
 ---
 
@@ -386,9 +398,9 @@ $$
 t = \frac{\hat{\theta} - \theta}{\widehat{SE}_{\theta}}
 $$
 
-where $\hat{\theta}$ is the sample estimate of the statistic, $\theta$ is the true population value (which we usually get from our null hypothesis), and $\widehat{SE}_{\theta}$ is the sampe estimate of the standard error. 
+where $\hat{\theta}$ is the sample estimate of the statistic, $\theta$ is the true population value (which we get from our null hypothesis), and $\widehat{SE}_{\theta}$ is the sampe estimate of the standard error. 
 
-There is an analog to this process for bootstrap samples:
+There is an analog to this process for bootstrap samples.
 
 ---
 
@@ -412,7 +424,7 @@ _If_ we're lucky enough to have a formula for a sample standard error, we use th
 For the mean, each bootstrap sample would return:
 
 1. The bootstrap sample mean, $\frac{1}{n}\sum(s_{bi})$
-2. The bootstrap sample variance: $\frac{s^2}{n}$.
+2. The bootstrap sample variance: $\frac{s^2_b}{n}$.
 
 We don't have such a formula that works for any correlation, so we need another means to estimate the variance.
 
@@ -425,7 +437,7 @@ Nested bootstrap algorithm:
 1. Draw a bootstrap sample.
 2. Estimate the statistic.
 3. Bootstrap the bootstrap sample, using the variance of estimates across the bootstrapped estimates as the estimate of the variance.
-4. Save the bootstrap estimate of the statistic and the bootstrap-bootstrap estimate of the variance.
+4. Save the bootstrap estimate of the statistic and the nested bootstrap estimate of the variance.
 5. For each bootstrap sample, estimate $t = \frac{\tilde{\theta} - \hat{\theta}}{\widehat{SE}_{\hat{\theta}}}$ 
 
 We now have the information we need to calculate the studentized confidence interval.
@@ -452,7 +464,7 @@ The $q_{1-\alpha/2}$ and $q_{\alpha/2}$ are identified by taking the appropriate
 
 This is akin to creating our own table of $t$-statistics, rather than using the typical tables for the $t$ distribution you'd find in text books.
 
-What does this look like in R? (Note: following code may need updating)
+What does this look like in R? (Note: following code may need updating.)
 
 ---
 
@@ -563,7 +575,7 @@ u_basic <- round(2*r - l_q, 3)
 
 Because we started out with $\tilde{\theta}$ as the random variable, we can use our bootstrap quantiles for the values of $q_{1-\alpha/2}$ and $q_{\alpha/2}$. 
 
-To do so, arrange the estimates in order from lowest to farthest, and use a quantile or percentile function to find the value at the 2.5 and 95.5 percentiles (given two-tailed $\alpha = .05$). 
+To do so, arrange the estimates in order from lowest to farthest, and use a percentile function to find the value at the 2.5th and 97.5th percentiles (given two-tailed $\alpha = .05$). 
 
 ---
 
@@ -577,7 +589,7 @@ $$
 \end{align}
 $$
 
-some text
+...
 
 ---
 
@@ -652,7 +664,7 @@ $$
 \hat{a} = \frac{\sum^n_{i=1}(\hat{\theta}_{(\cdot)} - \hat{\theta}_{(i)})}{6\{\sum^n_{i=1}(\hat{\theta}_{(\cdot)} - \hat{\theta}_{(i)})^2\}^{3/2}}
 $$
 
-where $\hat{\theta}_{(\cdot)}$ is the mean of the bootstrap estimates and $\hat{\theta}_{(i)})^2$ the estimate after deleting the $i$th case. The process of estimating a statistic $n$ times, each time dropping the $i \in N$ observations, is known as the _jackknife_ estimate.  
+where $\hat{\theta}_{(\cdot)}$ is the mean of the bootstrap estimates and $\hat{\theta}_{(i)}$ the estimate after deleting the $i$th case. The process of estimating a statistic $n$ times, each time dropping the $i \in N$ observations, is known as the _jackknife_ estimate.  
 
 ---
 
@@ -660,7 +672,7 @@ The purpose of the acceleration term is to account for situations in which the s
 
 This, by the way, is exactly what happens with the correlation (the SE estimator we provided at the start of the post only works when $r = 0$). 
 
-An equilvalent way of thinking about this is that it accounts for skew in the sampling distribution, like what we have seen in the prior histograms.
+An equivalent way of thinking about this is that it accounts for skew in the sampling distribution, like what we have seen in the prior histograms.
 
 ---
 
@@ -704,12 +716,12 @@ Return to our original questions:
 
 1. Why are there multiple CIs? How are they calculated? - Answered
 2. What are the bootstrap variances needed for studentized intervals? - Answered
-3. What does it mean that the calculations and intervals are on the same scale? - Not Answered
-4. Why are some BCa intervals unstable? - Answered
+3. What does it mean that the calculations and intervals are on the original scale? - Not Answered
+4. Why are some BCa intervals unstable? - Because BCa is known to require a large number of bootstrap samples for accuracy.
 
 ---
 
-What does it mean that calculations and intervals are on the same scale?
+What does it mean that calculations and intervals are on the original scale?
 
 There are sometimes advantages of transforming a statistic so that it is on a different scale. An example is the correlation coefficient.
 
