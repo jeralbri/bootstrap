@@ -447,7 +447,7 @@ We now have the information we need to calculate the studentized confidence inte
 The formula for the studentized bootstrap confidence interval is:
 
 $$
-95\% \text{ CI} = (\hat{\theta} - sq_{1-\alpha/2}, \hat{\theta} - sq_{\alpha/2})
+95\% \text{ CI} = [\hat{\theta} - sq_{1-\alpha/2}, \hat{\theta} - sq_{\alpha/2}]
 $$
 The terms are:
 
@@ -464,7 +464,7 @@ The $q_{1-\alpha/2}$ and $q_{\alpha/2}$ are identified by taking the appropriate
 
 This is akin to creating our own table of $t$-statistics, rather than using the typical tables for the $t$ distribution you'd find in text books.
 
-What does this look like in R? (Note: following code may need updating.)
+What does this look like in R? 
 
 ---
 
@@ -483,10 +483,35 @@ get_r_var <- function(x, y, data, indices, its) {
   
 }
 
-boot_t_out <- boot(x = "lsat", y = "gpa", its = 100, 
-                   R = 100, data = tbl, statistic = get_r_var)
+boot_t_out <- boot(x = "lsat", y = "gpa", its = 200, 
+                   R = 1000, data = tbl, statistic = get_r_var)
 
 ```
+
+---
+
+```{r, echo = FALSE}
+
+t0 <- boot_t_out$t0[1]
+t <- boot_t_out$t[, 1]
+var.t0 <- boot_t_out$t0[2]
+var.t <- boot_t_out$t[, 2]
+
+z <- (t - t0) / sqrt(var.t)
+
+quant <- quantile(z, probs = c(0.975, 0.025), type = 6)
+
+```
+
+We find that $q_{1-\alpha/2} = `r round(quant[1], 3)`$ and that $q_{\alpha/2} = `r round(quant[2], 3)`$. Substituting into the formula:
+
+$$
+\begin{align}
+\text{95% CI} &= [\hat{\theta} - sq_{1-\alpha/2}, \hat{\theta} - sq_{\alpha/2}] \\
+               &= [`r t0` - `r round(sqrt(var.t0), 3)` \times `r round(quant[1], 3)`, `r t0` - `r round(sqrt(var.t0), 3)` \times `r round(quant[2], 3)`] \\
+               &= [`r round(t0 - sqrt(var.t0) * quant[1], 3)`,`r round(t0 - sqrt(var.t0) * quant[2], 3)`]
+\end{align}
+$$
 
 ---
 
