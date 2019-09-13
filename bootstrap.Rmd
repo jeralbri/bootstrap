@@ -529,7 +529,8 @@ Problems:
 
 - The nested bootstrap part is computationally intensive, even for simple problems like this.
 - May still produce estimates outside range of plausible values.
-- Can be erratic in practice.
+- Here our sample was small, so the variance of each bootstrap estimate was large.
+- In general has been found to be erratic in practice.
 
 ## Basic Bootstrap Confidence Interval
 
