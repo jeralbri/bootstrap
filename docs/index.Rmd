@@ -262,7 +262,8 @@ The distribution of the correlation estimates across the 500 samples represents 
 par_boot_tbl %>% 
   ggplot(aes(x = r)) + geom_histogram(bins = 25, color = "black", fill = "firebrick") +
   labs(x = "(Parametric) Bootstrap Estimate of r", y = "Frequency") +
-  xlim(c(0,1))
+  xlim(c(0,1)) +
+  theme_bw()
 
 ```
 
@@ -277,7 +278,7 @@ Of course, we often will not feel comfortable saying that the population distrib
 Recall that the usual formula for estimating a confidence around a statistic $\theta$ is something like:
 
 $$
-\text{95% CI} = \theta \pm t_{df,1-\alpha/2} SE_{\theta}
+\text{95\% CI} = \theta \pm t_{df,1-\alpha/2} SE_{\theta}
 $$
 
 We saw that using the textbook standard error estimate for a correlation led us astray because we ended up with an interval outside of the range of plausible values. There are a variety of alternative approaches to calculating confidence intervals based on the bootstrap. We'll walk through the ones most commonly output by software and discuss how they are calculated. 
@@ -403,7 +404,7 @@ We created a bootstrap distribution of t-statistics and find that the 2.5th and 
 
 $$
 \begin{align}
-\text{9\5% CI} &= [\hat{\theta} - sq_{1-\alpha/2}, \hat{\theta} - sq_{\alpha/2}] \\
+\text{95\% CI} &= [\hat{\theta} - sq_{1-\alpha/2}, \hat{\theta} - sq_{\alpha/2}] \\
                &= [`r t0` - `r round(sqrt(var.t0), 3)` \times `r round(quant[1], 3)`, `r t0` - `r round(sqrt(var.t0), 3)` \times `r round(quant[2], 3)`] \\
                &= [`r round(t0 - sqrt(var.t0) * quant[1], 3)`,`r round(t0 - sqrt(var.t0) * quant[2], 3)`]
 \end{align}
@@ -564,7 +565,6 @@ where $\alpha$ is our Type-I error rate, usually .05.
 Our confidence limits are:
 
 $$
-\\
 95\% \text{ CI} = [\hat{\theta}^{*(\alpha_1)}, \hat{\theta}^{*(\alpha_2)}]
 $$
 

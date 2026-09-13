@@ -1,2 +1,1 @@
-# bootstrap
-Slides for explaining bootstrap confidence intervals
+This repo provides a tutorial for understanding the output from R's `boot` package's functions for bootstrapping. The rendered tutorial can be viewed here: https://jeralbri.github.io/bootstrap/
