@@ -363,7 +363,7 @@ t = \frac{r}{SE_r} = \frac{0.776}{0.175} = 4.434
 <h2 class="anchored" data-anchor-id="bootstrap-confidence-intervals">Bootstrap Confidence Intervals</h2>
 <p>Recall that the usual formula for estimating a confidence around a statistic <span class="math inline">\(\theta\)</span> is something like:</p>
 <p><span class="math display">\[
-\text{95% CI} = \theta \pm t_{df,1-\alpha/2} SE_{\theta}
+\text{95\% CI} = \theta \pm t_{df,1-\alpha/2} SE_{\theta}
 \]</span></p>
 <p>We saw that using the textbook standard error estimate for a correlation led us astray because we ended up with an interval outside of the range of plausible values. There are a variety of alternative approaches to calculating confidence intervals based on the bootstrap. We’ll walk through the ones most commonly output by software and discuss how they are calculated.</p>
 </section>
@@ -459,7 +459,7 @@ t = \frac{\tilde{\theta} - \hat{\theta}}{\widehat{SE}_{\hat{\theta}}}
 <p>We created a bootstrap distribution of t-statistics and find that the 2.5th and 97.5th percentiles are 9.673 and -1.669, respectively. Substituting into the formula:</p>
 <p><span class="math display">\[
 \begin{align}
-\text{9\5% CI} &amp;= [\hat{\theta} - sq_{1-\alpha/2}, \hat{\theta} - sq_{\alpha/2}] \\
+\text{95\% CI} &amp;= [\hat{\theta} - sq_{1-\alpha/2}, \hat{\theta} - sq_{\alpha/2}] \\
                &amp;= [0.776 - 0.144 \times 9.673, 0.776 - 0.144 \times -1.669] \\
                &amp;= [-0.615,1.016]
 \end{align}
@@ -602,7 +602,6 @@ Calculations and Intervals on Original Scale</code></pre>
 <p>where <span class="math inline">\(\alpha\)</span> is our Type-I error rate, usually .05.</p>
 <p>Our confidence limits are:</p>
 <p><span class="math display">\[
-\\
 95\% \text{ CI} = [\hat{\theta}^{*(\alpha_1)}, \hat{\theta}^{*(\alpha_2)}]
 \]</span></p>
 <p>Based on the formulas above, it should be obvious that <span class="math inline">\(a_1\)</span> and <span class="math inline">\(a_2\)</span> reduces to the percentile intervals when the bias and acceleration terms are zero. The bias and acceleration corrections change the percentiles we use to establish our limits.</p>
