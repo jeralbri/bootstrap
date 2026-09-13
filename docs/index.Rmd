@@ -1,8 +1,8 @@
 ---
-title: "A Closer Look at the Bootstrap"
+title: "A Closer Look at the Bootstrap in R"
 author: "Jeremy Albright"
-date: "8/20/2019"
-output: ioslides_presentation
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: html
 editor_options: 
   chunk_output_type: console
 ---
@@ -14,15 +14,14 @@ library(tidyverse)
 library(knitr)
 library(boot)
 library(MASS)
-library(plotly)
 
 ```
 
 ## Motivation
 
-Start with the data described in Efron and Tibshriani (1993, page 19). We have 15 paired observations of student LSAT scores and GPAs 
+Start with the data described in Efron and Tibshriani (1993, page 19). We have 15 paired observations of student LSAT scores and GPAs We want to estimate the correlation between LSAT and GPA scores. 
 
-We want to estimate the correlation between LSAT and GPA scores. Summary statistics are the following:
+Summary statistics are the following:
 
 ```{r, echo = F}
 
@@ -53,8 +52,6 @@ tbl %>%
 
 ```
 
----
-
 The correlation turns out to be `r r`. For reasons we'll explore, we want to use the nonparametric bootstrap to get a confidence interval around our estimate of $r$. We do so using the `boot` package in R.
 
 Steps:
@@ -62,8 +59,6 @@ Steps:
 1. Define a function that returns the statistic we want.
 2. Use the `boot` function to get `R` bootstrap replicates of the statistic.
 3. Use the `boot.ci` function to get the confidence intervals.
-
----
 
 Our function:
 
@@ -80,26 +75,13 @@ get_r <- function(data, indices, x, y) {
 
 ```
 
----
+The `indices` argument is required for any function fed to `boot` and is used to create the bootstrap samples from the `data`.
 
-Perform the bootstrapping and request CIs:
+Now we can perform the bootstrapping and request CIs:
 
-```{r, eval = F}
+```{r}
 
-set.seed(12345)
-
-boot_out <- boot(data = tbl, x = "lsat", y = "gpa", R = 500,  
-                 statistic = get_r)
-
-boot.ci(boot_out)
-
-```
-
----
-
-```{r, echo = F}
-
-set.seed(12345)
+set.seed(1006)  
 
 boot_out <- boot(data = tbl, x = "lsat", y = "gpa", R = 500,  
                  statistic = get_r)
@@ -108,9 +90,7 @@ boot.ci(boot_out)
 
 ```
 
----
-
-Questions:
+A new user may have some questions:
 
 1. Why are there multiple CIs? How are they calculated?
 2. What are the bootstrap variances needed for studentized intervals?
@@ -121,7 +101,7 @@ To understand this output, let's review statistical inference, confidence interv
 
 ## Statistical Inference
 
-The usual test statistic for determining if $r \neq 0$ is:
+A commonly used test statistic for determining if $r \neq 0$ is:
 
 $$
 t = \frac{r}{SE_r}
@@ -141,7 +121,6 @@ SE_r = \sqrt{\frac{1-r^2}{n-2}}
      = `r r_se`
 $$
 
----
 
 Dividing $r$ by $SE_r$ yields our $t$ statistic
 
@@ -149,30 +128,27 @@ $$
 t = \frac{r}{SE_r} = \frac{`r r`}{`r r_se`} = `r round(r/r_se, 3)`
 $$
 
-We compare this to a $t$ distribution with $n-2 = 13$ degrees of freedom and easily find it to be significant.
+We compare this to a $t$ distribution with $n-2 = 13$ degrees of freedom and easily find it to be significant given $\alpha = 0.05$.
 
-In words: If the null hypothesis were true, we repeatedly draw samples of size $n$, and we calculate $r$ each time, then the probability we would observe an estimate of $|r| = `r r`$ or larger is less than 5%. 
+In words: If the null hypothesis were true, and we repeatedly draw samples of size $n$, and then we calculate $r$ on each sample separately, the probability we would observe an estimate of $|r| = `r r`$ or larger is less than 5%. 
 
 ## Confidence Intervals
 
-An important caveat. The formula for the standard error is only correct when $r = 0$. The closer we get to $\pm 1$, the less correct it is.
+An important caveat. This formula for the standard error is only correct when $r = 0$. The closer we get to $\pm 1$, the less correct it is.
 
 We can see why by considering the 95% confidence interval for out estimate. The usual formula you see for a confidence interval is the estimate plus or minus the 97.5th percentile of the normal or $t$ distribution times the standard error.
 
 $$
-\text{95% CI} = r \pm t_{df = 13} SE_r
+\text{95\% CI} = r \pm t_{df,1-\alpha/2} SE_r
 $$
 
 If we were to sample 15 students repeatedly from our population and calculate this confidence interval each time, the interval should include the true population value 95% of the time.
-
-
----
 
 So what happens if we use the standard formula for the confidence interval? 
 
 $$
 \begin{align}
-\text{95% CI} &= r \pm t_{df = 13}SE_r \\
+\text{95\% CI} &= r \pm t_{df = 13}SE_r \\
                &= `r r` \pm `r abs(round(qt(.025, 13), 3))`\times `r r_se` \\
                &= [`r r_lo`, `r r_hi`]
 \end{align}
@@ -181,7 +157,7 @@ Recall that correlations are bounded in the range $[-1, +1]$, but our 95% confid
 
 Alternatives:
 
-- Use Fisher's $z$-transformation (what your software will do).
+- Use Fisher's $z$-transformation (what your software will do, but is specific to Pearson's $r$).
 - Use the bootstrap (generalizes to most statistics).
 
 
@@ -195,8 +171,6 @@ In the absence of supplementary information about the population (e.g. that it f
 
 If statistical inference is typically defined by repeated sampling from a population, and our sample provides a good estimate of the population distribution, we can conduct inferential tasks by repeatedly sampling from our _sample_. 
 
---- 
-
 (Nonparametric) bootstrapping thus works as follows for a sample of size _N_:
 
 1. Draw a random sample of size _N_ with replacement, which is the first _bootstrap sample_.
@@ -206,19 +180,9 @@ If statistical inference is typically defined by repeated sampling from a popula
 5. Repeat $k$ times.
 6. Use the distribution of estimates across the $k$ bootstrap samples as the sampling distribution.
 
----
-
-Note that the sampling is done with replacement. 
-
-Most results from traditional statistics are based on the assumption of random sampling with replacement. 
-
-Usually, the population we sample from is large enough that we do not bother noting the "with replacement" part. 
-
-If the sample is large relative to the population, and sampling _without_ replacement is used, we would typically be advised to use a _finite population correction_. 
+Note that the sampling is done with replacement. In fact, most results from traditional statistics are based on the assumption of random sampling with replacement. Usually, the population we sample from is large enough that we do not bother noting the "with replacement" part. If the sample is large relative to the population, and sampling _without_ replacement is used, we would typically be advised to use a _finite population correction_. 
 
 This is just to say that the "with replacement" requirement is a standard part of the definition of _random sampling_.
-
----
 
 Let's take our data as an example. We will draw 500 bootstrap samples, each of size $n = 15$ drawn _with replacement_ from our original data. The distribution across repeated samples is:
 
@@ -229,15 +193,12 @@ hist_me <- tibble(r = boot_out$t)
 ggplot(hist_me, aes(x = r)) + 
   geom_histogram(bins = 25, color = "black", fill = "firebrick") +
   labs(x = "Bootstrap Estimate of r", y = "Frequency") +
-  xlim(c(0,1))
-
+  xlim(c(0,1)) +
+  theme_bw()
 
 ```
 
----
-
 Note a few things about this distribution.
-
 
 ```{r, echo = F}
 
@@ -251,23 +212,15 @@ boot_se   <- round(sd(boot_out$t), 3)
 2. The mean estimate of $r$ across the 500 bootstrap samples is `r boot_mean`. The difference between the mean of the bootstrap estimates $(\mathbb{E}(r_b) = `r boot_mean`)$ and the original sample estimate $(r = `r r`)$ is the _bias_.
 3. The standard error is the standard deviation of the bootstrap sampling distribution. Here the value is `r boot_se`, which is much smaller than our earlier estimate of `r r_se`. This is because `r r_se` was based on a formula that is only valid when $r = 0$.
 
----
-
 The non-normality of the sampling distribution means that, if we divide $r$ by the bootstrap standard error, we will not get a statistic that is distributed standard normal or $t$. 
 
-Instead, it is a better idea to summarize our uncertainty using a confidence interval. 
-
-We want to make sure, however, that our confidence intervals are bounded within the $[-1, +1]$ range. 
-
-Before turning to different methods for obtaining bootstrap confidence intervals, the next section describes the parametric bootstrap.
+Instead, we can opt to summarize our uncertainty using a bootstrap confidence interval. As we saw above in the R output, however, there are actually multiple bootstrap confidence intervals. Before explaining these different methods, the next section will briefly describe the less often used _parametric_ bootstrap.
 
 ## Parametric Bootstrap
 
-The prior section noted that, in the absence of supplementary information about the population, the empirical distribution from our sample contains as much information about the population distribution as we can get. 
+The prior section noted that, in the absence of supplementary information about the population, the empirical distribution from our sample contains as much information about the population distribution as we can get. An example of supplementary information that may improve our estimates would be if we were to know that the LSAT and GPA scores are distributed bivariate normal. If we are willing to make this assumption, we can use our sample to estimate the population parameters for the bivariate nomral distribution. 
 
-An example of supplementary information that may improve our estimates would be that we know the LSAT and GPA scores are distributed bivariate normal.
-
-If we are willing to make this assumption, we can use our sample to estimate the distribution parameters. Based on our sample, we find:
+Applying this assumption to our sample, we would get:
 
 $$
 \begin{pmatrix}
@@ -282,28 +235,8 @@ $$
 \end{pmatrix}\right).
 $$
 
----
 
-The distribution looks like the following:
-
-```{r, echo = F}
-
-#---------- Plotly disables MathJax
-
-sim_tbl <- mvrnorm(10000, mu = c(600,3), Sigma = matrix(c(1747, 7.9, 7.9, .06), 2))
-
-z <- mvtnorm::dmvnorm(sim_tbl, mean = c(600,3), sigma = matrix(c(1747, 7.9, 7.9, .06), 2))
-
-sim_tbl <- with(as.data.frame(sim_tbl), kde2d(V1, V2, n = 50))
-
-plot_ly(x = sim_tbl$x, y = sim_tbl$y, z = sim_tbl$z) %>% 
-  add_surface()
-
-```
-
----
-
-Using R to perform Monte Carlo sampling from a specified distribution, we can draw 500 random samples of size 15 from this specific bivariate normal distribution and calculate the correlation between the two variables for each. 
+Using R to perform Monte Carlo sampling, we can draw 500 random samples of size 15 from this specific distribution and calculate the correlation between the two variables for each. 
 
 ```{r}
 
@@ -318,11 +251,9 @@ get_cor <- function(iteration, n) {
   
 }
 
-par_boot_tbl <- map_dfr(1:500, ~get_cor(.x, 15)) 
+par_boot_tbl <- map_df(1:500, ~get_cor(.x, 15)) 
 
 ```
-
----
 
 The distribution of the correlation estimates across the 500 samples represents our parametric bootstrap sampling distribution. It looks like the following:
 
@@ -335,13 +266,11 @@ par_boot_tbl %>%
 
 ```
 
----
-
 The average correlation across the 500 samples was `r round(mean(par_boot_tbl$r),3)`, and the standard deviation (our estimate of the standard error) was `r round(sd(par_boot_tbl$r),3)`. 
 
-This is smaller than our non-parametric bootstrap estimate of `r boot_se` reflective of the fact that our knowledge of the population distribution gives us more information. This in turn reduces sampling variability. 
+This is smaller than our non-parametric bootstrap estimate of `r boot_se` reflecting the additional information was are assuming. This in turn reduces sampling variability. 
 
-Of course, we often will not feel comfortable saying that the population distribution follows a well-defined shape, and hence we will typically default to the non-parametric version of the bootstrap.
+Of course, we often will not feel comfortable saying that the population distribution follows a well-defined shape, and hence we will typically default to the non- or semi-parametric versions of the bootstrap.
 
 ## Bootstrap Confidence Intervals
 
@@ -351,9 +280,7 @@ $$
 \text{95% CI} = \theta \pm t_{df,1-\alpha/2} SE_{\theta}
 $$
 
-We saw that using the textbook standard error estimate for a correlation led us astray because we ended up with an interval outside of the range of plausible values. 
-
-There are a variety of alternative approaches to calculating confidence intervals based on the bootstrap. We'll walk through the ones most commonly output by software and discuss how they are calculated. 
+We saw that using the textbook standard error estimate for a correlation led us astray because we ended up with an interval outside of the range of plausible values. There are a variety of alternative approaches to calculating confidence intervals based on the bootstrap. We'll walk through the ones most commonly output by software and discuss how they are calculated. 
 
 ## Standard Normal Interval
 
@@ -365,13 +292,12 @@ In our example, we get
 
 $$
 \begin{align}
-\text{95% CI} &= r - \text{bias} \pm 1.96 \times SE_r \\
-               &= `r r` + .005 \pm 1.96 \times `r boot_se` \\
+\text{95\% CI} &= r - \text{bias} \pm 1.96 \times SE_r \\
+               &= `r r` `r boot_bias` \pm 1.96 \times `r boot_se` \\
                &= [`r round(r- boot_bias - 1.96*boot_se,3)`, `r round(r - boot_bias + 1.96*boot_se,3)`]
 \end{align}
 $$
 
----
 
 Check.
 
@@ -380,8 +306,6 @@ Check.
 boot.ci(boot_out, type = "norm")
 
 ```
-
----
 
 Problems:
 
@@ -392,47 +316,29 @@ We generally won't use this method.
 
 ## Studentized (t) Intervals
 
-Recall that, when we calculate a $t$-statistic, we mean-center the original statistic and divide by the sample estimate of the standard error. That is,
+Recall that, when we calculate a $t$-statistic, we mean-center the original statistic and divide by the standard error. That is,
 
 $$
 t = \frac{\hat{\theta} - \theta}{\widehat{SE}_{\theta}}
 $$
 
-where $\hat{\theta}$ is the sample estimate of the statistic, $\theta$ is the true population value (which we get from our null hypothesis), and $\widehat{SE}_{\theta}$ is the sampe estimate of the standard error. 
+where $\hat{\theta}$ is the sample estimate of the statistic, $\theta$ is the true population value (which we get from our null hypothesis), and $\widehat{SE}_{\theta}$ is the the standard error (based on our sample estimate of the variance). 
 
-There is an analog to this process for bootstrap samples.
-
----
-
-In the bootstrap world, we can convert each bootstrap sample into a $t$-score as follows:
+There is an analog to this process for bootstrap samples. In the bootstrap world, we can convert each bootstrap sample into a $t$-score as follows:
 
 $$
 t = \frac{\tilde{\theta} - \hat{\theta}}{\widehat{SE}_{\hat{\theta}}} 
 $$
-Here $\tilde{\theta}$ is the statistic estimated from a single bootstrap sample, and $\hat{\theta}$ is the estimate from the original (non-bootstrap) sample. 
 
-But where does $\widehat{SE}_{\hat{\theta}}$ come from? 
+Here $\tilde{\theta}$ is the statistic estimated from a single bootstrap sample, and $\hat{\theta}$ is the estimate from the original (non-bootstrap) sample. But where does $\widehat{SE}_{\hat{\theta}}$ come from? 
 
-Just like for a $t$-test, where we estimated the standard error using our one sample, we estimate the standard error separately for each bootstrap sample. 
+Recall the message from the R output at the start of the slides that said `bootstrap variances needed for studentized intervals`. It was saying that, if we want studentized intervals, we need to provide a means for determining the _bootstrap sample variance_, i.e.  $\widehat{SE}_{\hat{\theta}}$ (squared). 
 
-That is, we need an estimate of the _bootstrap sample variance_. (Recall the message from the R output at the start of the slides).
+_If_ we're lucky enough to have a formula for a sample standard error, we can apply that within each bootstrap sample to return a bootstrap $t$-statistic. For example, if we were bootstrapping the mean, then each bootstrap sample's variance would be determined by the formula for the (squared) standard error of a mean, $\frac{s^2_b}{n}$.
 
----
+We're skeptical, though, of our formula for a correlation's standard error, which is really only reliable when correlations are zero. What we could use instead is the _nested bootstrap_.
 
-_If_ we're lucky enough to have a formula for a sample standard error, we use that in each sample.
-
-For the mean, each bootstrap sample would return:
-
-1. The bootstrap sample mean, $\frac{1}{n}\sum(s_{bi})$
-2. The bootstrap sample variance: $\frac{s^2_b}{n}$.
-
-We don't have such a formula that works for any correlation, so we need another means to estimate the variance.
-
-The delta method is one choice. Alternatively, there is the _nested bootstrap_.
-
----
-
-Nested bootstrap algorithm:
+The nested bootstrap algorithm is the following:
 
 1. Draw a bootstrap sample.
 2. Estimate the statistic.
@@ -440,15 +346,12 @@ Nested bootstrap algorithm:
 4. Save the bootstrap estimate of the statistic and the nested bootstrap estimate of the variance.
 5. For each bootstrap sample, estimate $t = \frac{\tilde{\theta} - \hat{\theta}}{\widehat{SE}_{\hat{\theta}}}$ 
 
-We now have the information we need to calculate the studentized confidence interval.
-
----
-
-The formula for the studentized bootstrap confidence interval is:
+We now have the information we need to calculate the studentized confidence interval. The formula for the studentized bootstrap confidence interval is:
 
 $$
 95\% \text{ CI} = [\hat{\theta} - sq_{1-\alpha/2}, \hat{\theta} - sq_{\alpha/2}]
 $$
+
 The terms are:
 
 1. $\hat{\theta}$: Our sample statistic (without performing the bootstrap)
@@ -456,17 +359,11 @@ The terms are:
 3. $q_{1-\alpha/2}$: For $\alpha = .05$, the 97.5th percentile of our bootstrap $t$ estimates.
 4. $q_{\alpha/2}$: For $\alpha = .05$, the 2.5th percentile of our bootstrap $t$ estimates.
 
----
-
-For each bootstrap sample, we calculated a $t$ statistic.
-
-The $q_{1-\alpha/2}$ and $q_{\alpha/2}$ are identified by taking the appropriate quantile of these $t$ estimates.
+For each bootstrap sample, we calculated a $t$ statistic. The $q_{1-\alpha/2}$ and $q_{\alpha/2}$ are identified by taking the appropriate quantile of these $t$ estimates.
 
 This is akin to creating our own table of $t$-statistics, rather than using the typical tables for the $t$ distribution you'd find in text books.
 
 What does this look like in R? 
-
----
 
 ```{r}
 
@@ -488,7 +385,6 @@ boot_t_out <- boot(x = "lsat", y = "gpa", its = 200,
 
 ```
 
----
 
 ```{r, echo = FALSE}
 
@@ -503,17 +399,15 @@ quant <- quantile(z, probs = c(0.975, 0.025), type = 6)
 
 ```
 
-We find that $q_{1-\alpha/2} = `r round(quant[1], 3)`$ and that $q_{\alpha/2} = `r round(quant[2], 3)`$. Substituting into the formula:
+We created a bootstrap distribution of t-statistics and find that the 2.5th and 97.5th percentiles are `r round(quant[1], 3)` and `r round(quant[2], 3)`, respectively. Substituting into the formula:
 
 $$
 \begin{align}
-\text{95% CI} &= [\hat{\theta} - sq_{1-\alpha/2}, \hat{\theta} - sq_{\alpha/2}] \\
+\text{9\5% CI} &= [\hat{\theta} - sq_{1-\alpha/2}, \hat{\theta} - sq_{\alpha/2}] \\
                &= [`r t0` - `r round(sqrt(var.t0), 3)` \times `r round(quant[1], 3)`, `r t0` - `r round(sqrt(var.t0), 3)` \times `r round(quant[2], 3)`] \\
                &= [`r round(t0 - sqrt(var.t0) * quant[1], 3)`,`r round(t0 - sqrt(var.t0) * quant[2], 3)`]
 \end{align}
 $$
-
----
 
 The studentized confidence interval:
 
@@ -522,8 +416,6 @@ The studentized confidence interval:
 boot.ci(boot_t_out, type = "stud")
 
 ```
-
----
 
 Problems: 
 
@@ -539,15 +431,11 @@ $$
 1-\alpha = P(q_{\alpha/2} \leq \theta \leq q_{1-\alpha/2})
 $$
 
-In non-bootstrap confidence intervals, $\theta$ is a fixed value while the lower and upper limits vary by sample. 
-
-In the basic bootstrap, we flip what is random in the probability statement. Define $\tilde{\theta}$ as a statistic estimated from a bootstrap sample. We can write
+In non-bootstrap confidence intervals, $\theta$ is a fixed value while the lower and upper limits vary by sample. In the basic bootstrap, we flip what is random in the probability statement. Define $\tilde{\theta}$ as a statistic estimated from a bootstrap sample. We can write
 
 $$
 1-\alpha = P(q_{\alpha/2} \leq \tilde{\theta} \leq q_{1-\alpha/2})
 $$
-
---- 
 
 Recall that the bias of a statistic is the difference between its expected value (mean) across many samples and the true population value:
 
@@ -557,8 +445,6 @@ $$
 
 We estimate this using our bootstrap samples, $\mathbb{E}(\tilde{\theta}) - \hat{\theta}$, where $\hat{\theta}$ is the estimate from the original sample (before bootstrapping). 
 
----
-
 We can add in the bias-correction term to each side of our inequality as follows.
 
 $$
@@ -567,8 +453,6 @@ $$
          &= P(q_{\alpha/2} - \hat{\theta} \leq \tilde{\theta}  - \hat{\theta} \leq q_{1-\alpha/2}  - \hat{\theta})
 \end{align} 
 $$
-
----
 
 Some more algebra:
 
@@ -582,10 +466,6 @@ $$
 \end{align}
 $$
 
-...
-
----
-
 The final row is our formula for the basic bootstrap confidence interval.
 
 ```{r, echo = F}
@@ -598,11 +478,7 @@ u_basic <- round(2*r - l_q, 3)
 
 ```
 
-Because we started out with $\tilde{\theta}$ as the random variable, we can use our bootstrap quantiles for the values of $q_{1-\alpha/2}$ and $q_{\alpha/2}$. 
-
-To do so, arrange the estimates in order from lowest to farthest, and use a percentile function to find the value at the 2.5th and 97.5th percentiles (given two-tailed $\alpha = .05$). 
-
----
+Because we started out with $\tilde{\theta}$ as the random variable, we can use our bootstrap quantiles for the values of $q_{1-\alpha/2}$ and $q_{\alpha/2}$. To do so, arrange the estimates in order from lowest to farthest, and use a percentile function to find the value at the 2.5th and 97.5th percentiles (given two-tailed $\alpha = .05$). 
 
 If we do so, we find that $q_{1-\alpha/2} = `r u_q`$ and that $q_{\alpha/2} = `r l_q`$. Substituting into the inequality:
 
@@ -614,9 +490,6 @@ $$
 \end{align}
 $$
 
-...
-
----
 
 The basic bootstrap interval is $[`r l_basic`, `r u_basic`]$.
 
@@ -640,8 +513,6 @@ quantile(boot_out$t, probs = c(.025, .975), type = 6)
 
 ```
 
----
-
 Compare:
 
 ```{r}
@@ -649,19 +520,6 @@ Compare:
 boot.ci(boot_out, type = "perc")
 
 ```
-
----
-
-The difference is in how `boot.ci` calculates quantiles. To see the code, run at the console:
-
-```{r, eval = F}
-
-getAnywhere("perc.ci")
-getAnywhere("norm.inter")
-
-```
-
----
 
 Looks like we have a winner. Our confidence interval will necessarily be limited to the range of plausible values.
 
@@ -681,8 +539,6 @@ $$
 
 The formula looks complicated but can be thought of as estimating something close to the median bias transformed into normal deviates ($\Phi^{-1}$ is the inverse standard normal cdf).
 
----
-
 The acceleration term is estimated as follows:
 
 $$
@@ -691,15 +547,7 @@ $$
 
 where $\hat{\theta}_{(\cdot)}$ is the mean of the bootstrap estimates and $\hat{\theta}_{(i)}$ the estimate after deleting the $i$th case. The process of estimating a statistic $n$ times, each time dropping the $i \in N$ observations, is known as the _jackknife_ estimate.  
 
----
-
-The purpose of the acceleration term is to account for situations in which the standard deviation of an estimator changes depending on the true population value. 
-
-This, by the way, is exactly what happens with the correlation (the SE estimator we provided at the start of the post only works when $r = 0$). 
-
-An equivalent way of thinking about this is that it accounts for skew in the sampling distribution, like what we have seen in the prior histograms.
-
----
+The purpose of the acceleration term is to account for situations in which the standard deviation of an estimator changes depending on the true population value. This, by the way, is exactly what happens with the correlation (the SE estimator we provided at the start of the post only works when $r = 0$). An equivalent way of thinking about this is that it accounts for skew in the sampling distribution, like what we have seen in the prior histograms.
 
 Armed with our bias correction and acceleration term, we now estimate the quantiles we will use for establishing the confidence limits. 
 
@@ -712,8 +560,6 @@ $$
 $$
 
 where $\alpha$ is our Type-I error rate, usually .05. 
-
----
 
 Our confidence limits are:
 
@@ -744,21 +590,15 @@ Return to our original questions:
 3. What does it mean that the calculations and intervals are on the original scale? - Not Answered
 4. Why are some BCa intervals unstable? - Because BCa is known to require a large number of bootstrap samples for accuracy.
 
----
-
 What does it mean that calculations and intervals are on the original scale?
 
-There are sometimes advantages of transforming a statistic so that it is on a different scale. An example is the correlation coefficient.
-
-We mentioned briefly above that the usual way of performing inference is to use the Fisher-$z$ transformation.
+There are sometimes advantages of transforming a statistic so that it is on a different scale. An example is the correlation coefficient. We mentioned briefly above that the usual way of performing inference is to use the Fisher-$z$ transformation.
 
 $$
 z = \frac{1}{2}\text{ln}\left(\frac{1+r}{1-r} \right)
 $$
 
 This transformation _is_ normally distributed with standard error $\frac{1}{\sqrt{N - 3}}$, so we can construct confidence intervals the usual way and then reverse-transform the limits using the inverse of the transformation function.
-
----
 
 The inverse of the transformation function is
 
@@ -774,8 +614,6 @@ fisher_z     <- function(r) .5*log((1+r)/(1-r))
 inv_fisher_z <- function(z) (exp(2*z)-1)/(exp(2*z)+1)  
 
 ```
-
----
 
 For some CIs, we also need the first derivative of the transformation function:
 
@@ -797,7 +635,6 @@ fisher_z_deriv <- function(r) {
 
 ```
 
----
 
 Use `boot.ci`.
 
@@ -805,7 +642,7 @@ Use `boot.ci`.
 - If the transformation and the inverse transformation functions are applied, the confidence intervals are calculated on the transformed scale but returned on the original scale.
 - If the transformation, inverse transformation, and derivative are supplied, the calculations use the delta method for variance estimation (more consequential if transformation is not normally distributed).
 
----
+
 
 Compare:
 
@@ -815,7 +652,6 @@ boot.ci(boot_out, type = c("norm", "basic", "perc", "bca"))
 
 ```
 
----
 
 ```{r}
 
@@ -824,7 +660,6 @@ boot.ci(boot_out, h = fisher_z,
 
 ```
 
----
 
 ```{r}
 
@@ -833,7 +668,6 @@ boot.ci(boot_out, h = fisher_z, hinv = inv_fisher_z,
 
 ```
 
----
 
 ```{r}
 

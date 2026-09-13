@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jeremy Albright">
+<meta name="dcterms.date" content="2026-09-13">
+
+<title>A Closer Look at the Bootstrap in R</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="index_files/libs/clipboard/clipboard.min.js"></script>
+<script src="index_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="index_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="index_files/libs/quarto-html/popper.min.js"></script>
+<script src="index_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="index_files/libs/quarto-html/anchor.min.js"></script>
+<link href="index_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="index_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="index_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="index_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="index_files/libs/bootstrap/bootstrap-138a6193a3bd40baf1e627da441a4734.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="fullcontent quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">A Closer Look at the Bootstrap in R</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Jeremy Albright </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">September 13, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="motivation" class="level2">
+<h2 class="anchored" data-anchor-id="motivation">Motivation</h2>
+<p>Start with the data described in Efron and Tibshriani (1993, page 19). We have 15 paired observations of student LSAT scores and GPAs We want to estimate the correlation between LSAT and GPA scores.</p>
+<p>Summary statistics are the following:</p>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">test</th>
+<th style="text-align: center;">N</th>
+<th style="text-align: center;">Mean</th>
+<th style="text-align: center;">SD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">gpa</td>
+<td style="text-align: center;">15</td>
+<td style="text-align: center;">3.09</td>
+<td style="text-align: center;">0.24</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lsat</td>
+<td style="text-align: center;">15</td>
+<td style="text-align: center;">600.27</td>
+<td style="text-align: center;">41.79</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>The correlation turns out to be 0.776. For reasons we’ll explore, we want to use the nonparametric bootstrap to get a confidence interval around our estimate of <span class="math inline">\(r\)</span>. We do so using the <code>boot</code> package in R.</p>
+<p>Steps:</p>
+<ol type="1">
+<li>Define a function that returns the statistic we want.</li>
+<li>Use the <code>boot</code> function to get <code>R</code> bootstrap replicates of the statistic.</li>
+<li>Use the <code>boot.ci</code> function to get the confidence intervals.</li>
+</ol>
+<p>Our function:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>get_r <span class="ot">&lt;-</span> <span class="cf">function</span>(data, indices, x, y) {</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> data[indices,]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  r <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">as.numeric</span>(<span class="fu">cor</span>(d[x], d[y])), <span class="dv">3</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>  r</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The <code>indices</code> argument is required for any function fed to <code>boot</code> and is used to create the bootstrap samples from the <code>data</code>.</p>
+<p>Now we can perform the bootstrapping and request CIs:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1006</span>)  </span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>boot_out <span class="ot">&lt;-</span> <span class="fu">boot</span>(<span class="at">data =</span> tbl, <span class="at">x =</span> <span class="st">"lsat"</span>, <span class="at">y =</span> <span class="st">"gpa"</span>, <span class="at">R =</span> <span class="dv">500</span>,  </span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">statistic =</span> get_r)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">boot.ci</span>(boot_out)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in boot.ci(boot_out): bootstrap variances needed for studentized
+intervals</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 500 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = boot_out)
+
+Intervals : 
+Level      Normal              Basic         
+95%   ( 0.5107,  1.0479 )   ( 0.5815,  1.1150 )  
+
+Level     Percentile            BCa          
+95%   ( 0.4370,  0.9705 )   ( 0.2714,  0.9439 )  
+Calculations and Intervals on Original Scale
+Some BCa intervals may be unstable</code></pre>
+</div>
+</div>
+<p>A new user may have some questions:</p>
+<ol type="1">
+<li>Why are there multiple CIs? How are they calculated?</li>
+<li>What are the bootstrap variances needed for studentized intervals?</li>
+<li>What does it mean that the calculations and intervals are on the original scale?</li>
+<li>Why are some BCa intervals unstable?</li>
+</ol>
+<p>To understand this output, let’s review statistical inference, confidence intervals, and the bootstrap.</p>
+</section>
+<section id="statistical-inference" class="level2">
+<h2 class="anchored" data-anchor-id="statistical-inference">Statistical Inference</h2>
+<p>A commonly used test statistic for determining if <span class="math inline">\(r \neq 0\)</span> is:</p>
+<p><span class="math display">\[
+t = \frac{r}{SE_r}
+\]</span></p>
+<p>where</p>
+<p><span class="math display">\[
+SE_r = \sqrt{\frac{1-r^2}{n-2}}
+\]</span></p>
+<p>In our case:</p>
+<p><span class="math display">\[
+SE_r = \sqrt{\frac{1-r^2}{n-2}}
+     = \sqrt{\frac{1-0.776^2}{15-2}}
+     = 0.175
+\]</span></p>
+<p>Dividing <span class="math inline">\(r\)</span> by <span class="math inline">\(SE_r\)</span> yields our <span class="math inline">\(t\)</span> statistic</p>
+<p><span class="math display">\[
+t = \frac{r}{SE_r} = \frac{0.776}{0.175} = 4.434
+\]</span></p>
+<p>We compare this to a <span class="math inline">\(t\)</span> distribution with <span class="math inline">\(n-2 = 13\)</span> degrees of freedom and easily find it to be significant given <span class="math inline">\(\alpha = 0.05\)</span>.</p>
+<p>In words: If the null hypothesis were true, and we repeatedly draw samples of size <span class="math inline">\(n\)</span>, and then we calculate <span class="math inline">\(r\)</span> on each sample separately, the probability we would observe an estimate of <span class="math inline">\(|r| = 0.776\)</span> or larger is less than 5%.</p>
+</section>
+<section id="confidence-intervals" class="level2">
+<h2 class="anchored" data-anchor-id="confidence-intervals">Confidence Intervals</h2>
+<p>An important caveat. This formula for the standard error is only correct when <span class="math inline">\(r = 0\)</span>. The closer we get to <span class="math inline">\(\pm 1\)</span>, the less correct it is.</p>
+<p>We can see why by considering the 95% confidence interval for out estimate. The usual formula you see for a confidence interval is the estimate plus or minus the 97.5th percentile of the normal or <span class="math inline">\(t\)</span> distribution times the standard error.</p>
+<p><span class="math display">\[
+\text{95\% CI} = r \pm t_{df,1-\alpha/2} SE_r
+\]</span></p>
+<p>If we were to sample 15 students repeatedly from our population and calculate this confidence interval each time, the interval should include the true population value 95% of the time.</p>
+<p>So what happens if we use the standard formula for the confidence interval?</p>
+<p><span class="math display">\[
+\begin{align}
+\text{95\% CI} &amp;= r \pm t_{df = 13}SE_r \\
+               &amp;= 0.776 \pm 2.16\times 0.175 \\
+               &amp;= [0.398, 1.154]
+\end{align}
+\]</span> Recall that correlations are bounded in the range <span class="math inline">\([-1, +1]\)</span>, but our 95% confidence interval contains values greater than one!</p>
+<p>Alternatives:</p>
+<ul>
+<li>Use Fisher’s <span class="math inline">\(z\)</span>-transformation (what your software will do, but is specific to Pearson’s <span class="math inline">\(r\)</span>).</li>
+<li>Use the bootstrap (generalizes to most statistics).</li>
+</ul>
+</section>
+<section id="nonparametric-bootstrap" class="level2">
+<h2 class="anchored" data-anchor-id="nonparametric-bootstrap">Nonparametric Bootstrap</h2>
+<p>We do not know the true population distribution of LSAT and GPA scores. What we have instead is our sample.</p>
+<p>However, just like we can use our sample mean as an estimate of the population mean, we can use our sample distribution as an estimate of the population distribution.</p>
+<p>In the absence of supplementary information about the population (e.g.&nbsp;that it follows a specific distribution like bivariate normal), the <em>empirical distribution</em> from our sample contains as much information about the population distribution as we can get.</p>
+<p>If statistical inference is typically defined by repeated sampling from a population, and our sample provides a good estimate of the population distribution, we can conduct inferential tasks by repeatedly sampling from our <em>sample</em>.</p>
+<p>(Nonparametric) bootstrapping thus works as follows for a sample of size <em>N</em>:</p>
+<ol type="1">
+<li>Draw a random sample of size <em>N</em> with replacement, which is the first <em>bootstrap sample</em>.</li>
+<li>Estimate the statistic of interest using the bootstrap sample.</li>
+<li>Draw a new random sample of size <em>N</em> with replacement, which is the second bootstrap sample.</li>
+<li>Estimate the statistic of interest using the new bootstrap sample.</li>
+<li>Repeat <span class="math inline">\(k\)</span> times.</li>
+<li>Use the distribution of estimates across the <span class="math inline">\(k\)</span> bootstrap samples as the sampling distribution.</li>
+</ol>
+<p>Note that the sampling is done with replacement. In fact, most results from traditional statistics are based on the assumption of random sampling with replacement. Usually, the population we sample from is large enough that we do not bother noting the “with replacement” part. If the sample is large relative to the population, and sampling <em>without</em> replacement is used, we would typically be advised to use a <em>finite population correction</em>.</p>
+<p>This is just to say that the “with replacement” requirement is a standard part of the definition of <em>random sampling</em>.</p>
+<p>Let’s take our data as an example. We will draw 500 bootstrap samples, each of size <span class="math inline">\(n = 15\)</span> drawn <em>with replacement</em> from our original data. The distribution across repeated samples is:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Note a few things about this distribution.</p>
+<ol type="1">
+<li>The distribution is definitely <em>not</em> normal.</li>
+<li>The mean estimate of <span class="math inline">\(r\)</span> across the 500 bootstrap samples is 0.773. The difference between the mean of the bootstrap estimates <span class="math inline">\((\mathbb{E}(r_b) = 0.773)\)</span> and the original sample estimate <span class="math inline">\((r = 0.776)\)</span> is the <em>bias</em>.</li>
+<li>The standard error is the standard deviation of the bootstrap sampling distribution. Here the value is 0.137, which is much smaller than our earlier estimate of 0.175. This is because 0.175 was based on a formula that is only valid when <span class="math inline">\(r = 0\)</span>.</li>
+</ol>
+<p>The non-normality of the sampling distribution means that, if we divide <span class="math inline">\(r\)</span> by the bootstrap standard error, we will not get a statistic that is distributed standard normal or <span class="math inline">\(t\)</span>.</p>
+<p>Instead, we can opt to summarize our uncertainty using a bootstrap confidence interval. As we saw above in the R output, however, there are actually multiple bootstrap confidence intervals. Before explaining these different methods, the next section will briefly describe the less often used <em>parametric</em> bootstrap.</p>
+</section>
+<section id="parametric-bootstrap" class="level2">
+<h2 class="anchored" data-anchor-id="parametric-bootstrap">Parametric Bootstrap</h2>
+<p>The prior section noted that, in the absence of supplementary information about the population, the empirical distribution from our sample contains as much information about the population distribution as we can get. An example of supplementary information that may improve our estimates would be if we were to know that the LSAT and GPA scores are distributed bivariate normal. If we are willing to make this assumption, we can use our sample to estimate the population parameters for the bivariate nomral distribution.</p>
+<p>Applying this assumption to our sample, we would get:</p>
+<p><span class="math display">\[
+\begin{pmatrix}
+\text{LSAT} \\
+\text{GPA}
+\end{pmatrix}\sim N\left(\begin{pmatrix}
+600.27 \\
+3.09
+\end{pmatrix},\begin{pmatrix}
+1746.78 &amp; 7.90 \\
+7.90 &amp; 0.06
+\end{pmatrix}\right).
+\]</span></p>
+<p>Using R to perform Monte Carlo sampling, we can draw 500 random samples of size 15 from this specific distribution and calculate the correlation between the two variables for each.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>get_cor <span class="ot">&lt;-</span> <span class="cf">function</span>(iteration, n) {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  dta <span class="ot">&lt;-</span> MASS<span class="sc">::</span><span class="fu">mvrnorm</span>(n, <span class="at">mu =</span> <span class="fu">c</span>(<span class="dv">600</span>,<span class="dv">3</span>), </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">Sigma =</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1747</span>, <span class="fl">7.9</span>, <span class="fl">7.9</span>, .<span class="dv">06</span>), <span class="dv">2</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as.data.frame</span>()</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>   </span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="at">iteration =</span> iteration,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">r =</span> <span class="fu">cor</span>(dta<span class="sc">$</span>V1, dta<span class="sc">$</span>V2))</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>par_boot_tbl <span class="ot">&lt;-</span> <span class="fu">map_df</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">500</span>, <span class="sc">~</span><span class="fu">get_cor</span>(.x, <span class="dv">15</span>)) </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The distribution of the correlation estimates across the 500 samples represents our parametric bootstrap sampling distribution. It looks like the following:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The average correlation across the 500 samples was 0.753, and the standard deviation (our estimate of the standard error) was 0.12.</p>
+<p>This is smaller than our non-parametric bootstrap estimate of 0.137 reflecting the additional information was are assuming. This in turn reduces sampling variability.</p>
+<p>Of course, we often will not feel comfortable saying that the population distribution follows a well-defined shape, and hence we will typically default to the non- or semi-parametric versions of the bootstrap.</p>
+</section>
+<section id="bootstrap-confidence-intervals" class="level2">
+<h2 class="anchored" data-anchor-id="bootstrap-confidence-intervals">Bootstrap Confidence Intervals</h2>
+<p>Recall that the usual formula for estimating a confidence around a statistic <span class="math inline">\(\theta\)</span> is something like:</p>
+<p><span class="math display">\[
+\text{95% CI} = \theta \pm t_{df,1-\alpha/2} SE_{\theta}
+\]</span></p>
+<p>We saw that using the textbook standard error estimate for a correlation led us astray because we ended up with an interval outside of the range of plausible values. There are a variety of alternative approaches to calculating confidence intervals based on the bootstrap. We’ll walk through the ones most commonly output by software and discuss how they are calculated.</p>
+</section>
+<section id="standard-normal-interval" class="level2">
+<h2 class="anchored" data-anchor-id="standard-normal-interval">Standard Normal Interval</h2>
+<p>The first approach simply takes the usual approach for calculating a confidence interval, using the normal distribution value of 1.96 instead of the corresponding percentile from the appropriate t distribution.</p>
+<p>There are two differences. First, we use our bootstrap estimate of the standard error in the formula. Second, we make an adjustment for the estimated bias, -0.003:</p>
+<p>In our example, we get</p>
+<p><span class="math display">\[
+\begin{align}
+\text{95\% CI} &amp;= r - \text{bias} \pm 1.96 \times SE_r \\
+               &amp;= 0.776 -0.003 \pm 1.96 \times 0.137 \\
+               &amp;= [0.51, 1.048]
+\end{align}
+\]</span></p>
+<p>Check.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boot.ci</span>(boot_out, <span class="at">type =</span> <span class="st">"norm"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 500 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = boot_out, type = "norm")
+
+Intervals : 
+Level      Normal        
+95%   ( 0.5107,  1.0479 )  
+Calculations and Intervals on Original Scale</code></pre>
+</div>
+</div>
+<p>Problems:</p>
+<ul>
+<li>If a normal approximation were valid, we probably don’t need to bootstrap.</li>
+<li>We still have a CI outside the appropriate range.</li>
+</ul>
+<p>We generally won’t use this method.</p>
+</section>
+<section id="studentized-t-intervals" class="level2">
+<h2 class="anchored" data-anchor-id="studentized-t-intervals">Studentized (t) Intervals</h2>
+<p>Recall that, when we calculate a <span class="math inline">\(t\)</span>-statistic, we mean-center the original statistic and divide by the standard error. That is,</p>
+<p><span class="math display">\[
+t = \frac{\hat{\theta} - \theta}{\widehat{SE}_{\theta}}
+\]</span></p>
+<p>where <span class="math inline">\(\hat{\theta}\)</span> is the sample estimate of the statistic, <span class="math inline">\(\theta\)</span> is the true population value (which we get from our null hypothesis), and <span class="math inline">\(\widehat{SE}_{\theta}\)</span> is the the standard error (based on our sample estimate of the variance).</p>
+<p>There is an analog to this process for bootstrap samples. In the bootstrap world, we can convert each bootstrap sample into a <span class="math inline">\(t\)</span>-score as follows:</p>
+<p><span class="math display">\[
+t = \frac{\tilde{\theta} - \hat{\theta}}{\widehat{SE}_{\hat{\theta}}}
+\]</span></p>
+<p>Here <span class="math inline">\(\tilde{\theta}\)</span> is the statistic estimated from a single bootstrap sample, and <span class="math inline">\(\hat{\theta}\)</span> is the estimate from the original (non-bootstrap) sample. But where does <span class="math inline">\(\widehat{SE}_{\hat{\theta}}\)</span> come from?</p>
+<p>Recall the message from the R output at the start of the slides that said <code>bootstrap variances needed for studentized intervals</code>. It was saying that, if we want studentized intervals, we need to provide a means for determining the <em>bootstrap sample variance</em>, i.e.&nbsp;<span class="math inline">\(\widehat{SE}_{\hat{\theta}}\)</span> (squared).</p>
+<p><em>If</em> we’re lucky enough to have a formula for a sample standard error, we can apply that within each bootstrap sample to return a bootstrap <span class="math inline">\(t\)</span>-statistic. For example, if we were bootstrapping the mean, then each bootstrap sample’s variance would be determined by the formula for the (squared) standard error of a mean, <span class="math inline">\(\frac{s^2_b}{n}\)</span>.</p>
+<p>We’re skeptical, though, of our formula for a correlation’s standard error, which is really only reliable when correlations are zero. What we could use instead is the <em>nested bootstrap</em>.</p>
+<p>The nested bootstrap algorithm is the following:</p>
+<ol type="1">
+<li>Draw a bootstrap sample.</li>
+<li>Estimate the statistic.</li>
+<li>Bootstrap the bootstrap sample, using the variance of estimates across the bootstrapped estimates as the estimate of the variance.</li>
+<li>Save the bootstrap estimate of the statistic and the nested bootstrap estimate of the variance.</li>
+<li>For each bootstrap sample, estimate <span class="math inline">\(t = \frac{\tilde{\theta} - \hat{\theta}}{\widehat{SE}_{\hat{\theta}}}\)</span></li>
+</ol>
+<p>We now have the information we need to calculate the studentized confidence interval. The formula for the studentized bootstrap confidence interval is:</p>
+<p><span class="math display">\[
+95\% \text{ CI} = [\hat{\theta} - sq_{1-\alpha/2}, \hat{\theta} - sq_{\alpha/2}]
+\]</span></p>
+<p>The terms are:</p>
+<ol type="1">
+<li><span class="math inline">\(\hat{\theta}\)</span>: Our sample statistic (without performing the bootstrap)</li>
+<li><span class="math inline">\(s\)</span>: Our bootstrap estimate of the standard error (the standard deviation of bootstrap estimates, <em>not</em> the nested bootstrap part)</li>
+<li><span class="math inline">\(q_{1-\alpha/2}\)</span>: For <span class="math inline">\(\alpha = .05\)</span>, the 97.5th percentile of our bootstrap <span class="math inline">\(t\)</span> estimates.</li>
+<li><span class="math inline">\(q_{\alpha/2}\)</span>: For <span class="math inline">\(\alpha = .05\)</span>, the 2.5th percentile of our bootstrap <span class="math inline">\(t\)</span> estimates.</li>
+</ol>
+<p>For each bootstrap sample, we calculated a <span class="math inline">\(t\)</span> statistic. The <span class="math inline">\(q_{1-\alpha/2}\)</span> and <span class="math inline">\(q_{\alpha/2}\)</span> are identified by taking the appropriate quantile of these <span class="math inline">\(t\)</span> estimates.</p>
+<p>This is akin to creating our own table of <span class="math inline">\(t\)</span>-statistics, rather than using the typical tables for the <span class="math inline">\(t\)</span> distribution you’d find in text books.</p>
+<p>What does this look like in R?</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>get_r_var <span class="ot">&lt;-</span> <span class="cf">function</span>(x, y, data, indices, its) {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  d <span class="ot">&lt;-</span> data[indices,]</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  r <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">as.numeric</span>(<span class="fu">cor</span>(d[x], d[y])), <span class="dv">3</span>)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(d)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  v <span class="ot">&lt;-</span> <span class="fu">var</span>(<span class="fu">boot</span>(<span class="at">x =</span> x, <span class="at">y =</span> y, <span class="at">R =</span> its, <span class="at">data =</span> d, </span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>                <span class="at">statistic =</span> get_r)<span class="sc">$</span>t, <span class="at">na.rm =</span> T)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(r, v)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>boot_t_out <span class="ot">&lt;-</span> <span class="fu">boot</span>(<span class="at">x =</span> <span class="st">"lsat"</span>, <span class="at">y =</span> <span class="st">"gpa"</span>, <span class="at">its =</span> <span class="dv">200</span>, </span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>                   <span class="at">R =</span> <span class="dv">1000</span>, <span class="at">data =</span> tbl, <span class="at">statistic =</span> get_r_var)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>We created a bootstrap distribution of t-statistics and find that the 2.5th and 97.5th percentiles are 9.673 and -1.669, respectively. Substituting into the formula:</p>
+<p><span class="math display">\[
+\begin{align}
+\text{9\5% CI} &amp;= [\hat{\theta} - sq_{1-\alpha/2}, \hat{\theta} - sq_{\alpha/2}] \\
+               &amp;= [0.776 - 0.144 \times 9.673, 0.776 - 0.144 \times -1.669] \\
+               &amp;= [-0.615,1.016]
+\end{align}
+\]</span></p>
+<p>The studentized confidence interval:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boot.ci</span>(boot_t_out, <span class="at">type =</span> <span class="st">"stud"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 1000 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = boot_t_out, type = "stud")
+
+Intervals : 
+Level    Studentized     
+95%   (-0.6154,  1.0161 )  
+Calculations and Intervals on Original Scale</code></pre>
+</div>
+</div>
+<p>Problems:</p>
+<ul>
+<li>The nested bootstrap part is computationally intensive, even for simple problems like this.</li>
+<li>May still produce estimates outside range of plausible values.</li>
+<li>Can be erratic in practice.</li>
+</ul>
+</section>
+<section id="basic-bootstrap-confidence-interval" class="level2">
+<h2 class="anchored" data-anchor-id="basic-bootstrap-confidence-interval">Basic Bootstrap Confidence Interval</h2>
+<p>Another way of writing a confidence interval:</p>
+<p><span class="math display">\[
+1-\alpha = P(q_{\alpha/2} \leq \theta \leq q_{1-\alpha/2})
+\]</span></p>
+<p>In non-bootstrap confidence intervals, <span class="math inline">\(\theta\)</span> is a fixed value while the lower and upper limits vary by sample. In the basic bootstrap, we flip what is random in the probability statement. Define <span class="math inline">\(\tilde{\theta}\)</span> as a statistic estimated from a bootstrap sample. We can write</p>
+<p><span class="math display">\[
+1-\alpha = P(q_{\alpha/2} \leq \tilde{\theta} \leq q_{1-\alpha/2})
+\]</span></p>
+<p>Recall that the bias of a statistic is the difference between its expected value (mean) across many samples and the true population value:</p>
+<p><span class="math display">\[
+\text{bias} = \mathbb{E}(\hat{\theta}) - \theta
+\]</span></p>
+<p>We estimate this using our bootstrap samples, <span class="math inline">\(\mathbb{E}(\tilde{\theta}) - \hat{\theta}\)</span>, where <span class="math inline">\(\hat{\theta}\)</span> is the estimate from the original sample (before bootstrapping).</p>
+<p>We can add in the bias-correction term to each side of our inequality as follows.</p>
+<p><span class="math display">\[
+\begin{align}
+1-\alpha &amp;= P(q_{\alpha/2} \leq \tilde{\theta} \leq q_{1-\alpha/2}) \\
+         &amp;= P(q_{\alpha/2} - \hat{\theta} \leq \tilde{\theta}  - \hat{\theta} \leq q_{1-\alpha/2}  - \hat{\theta})
+\end{align}
+\]</span></p>
+<p>Some more algebra:</p>
+<p><span class="math display">\[
+\begin{align}
+1-\alpha &amp;= P(q_{\alpha/2} \leq \tilde{\theta} \leq q_{1-\alpha/2}) \\
+         &amp;= P(q_{\alpha/2} - \hat{\theta} \leq \tilde{\theta}  - \hat{\theta} \leq q_{1-\alpha/2}  - \hat{\theta}) \\
+         &amp;\approx P(q_{\alpha/2} - \hat{\theta} \leq \hat{\theta}  - \theta \leq q_{1-\alpha/2}  - \hat{\theta}) \\
+         &amp;= P(q_{\alpha/2} - 2\hat{\theta} \leq -\theta \leq q_{1-\alpha/2} - 2\hat{\theta}) \\
+         &amp;= P(2\hat{\theta} - q_{1-\alpha/2} \leq \theta \leq 2\hat{\theta} - q_{\alpha/2} )
+\end{align}
+\]</span></p>
+<p>The final row is our formula for the basic bootstrap confidence interval.</p>
+<p>Because we started out with <span class="math inline">\(\tilde{\theta}\)</span> as the random variable, we can use our bootstrap quantiles for the values of <span class="math inline">\(q_{1-\alpha/2}\)</span> and <span class="math inline">\(q_{\alpha/2}\)</span>. To do so, arrange the estimates in order from lowest to farthest, and use a percentile function to find the value at the 2.5th and 97.5th percentiles (given two-tailed <span class="math inline">\(\alpha = .05\)</span>).</p>
+<p>If we do so, we find that <span class="math inline">\(q_{1-\alpha/2} = 0.97\)</span> and that <span class="math inline">\(q_{\alpha/2} = 0.437\)</span>. Substituting into the inequality:</p>
+<p><span class="math display">\[
+\begin{align}
+1-\alpha &amp;= P(2\hat{r} - q_{1-\alpha/2} \leq r \leq 2\hat{r} - q_{\alpha/2} ) \\
+         &amp;= P(2(0.776) - 0.97) \leq r \leq 2(0.776) - 0.437) \\
+         &amp;= P(0.582 \leq r \leq 1.115)
+\end{align}
+\]</span></p>
+<p>The basic bootstrap interval is <span class="math inline">\([0.582, 1.115]\)</span>.</p>
+<p>To confirm:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boot.ci</span>(boot_out, <span class="at">type =</span> <span class="st">"basic"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 500 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = boot_out, type = "basic")
+
+Intervals : 
+Level      Basic         
+95%   ( 0.5815,  1.1150 )  
+Calculations and Intervals on Original Scale</code></pre>
+</div>
+</div>
+<p>But we’re still outside the range we want.</p>
+</section>
+<section id="percentile-confidence-intervals" class="level2">
+<h2 class="anchored" data-anchor-id="percentile-confidence-intervals">Percentile Confidence Intervals</h2>
+<p>Here’s an easy solution. Line up the bootstrap estimates from lowest to hightest, then take the 2.5th and 97.5th percentile.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">quantile</span>(boot_out<span class="sc">$</span>t, <span class="at">probs =</span> <span class="fu">c</span>(.<span class="dv">025</span>, .<span class="dv">975</span>), <span class="at">type =</span> <span class="dv">6</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    2.5%    97.5% 
+0.437000 0.970475 </code></pre>
+</div>
+</div>
+<p>Compare:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boot.ci</span>(boot_out, <span class="at">type =</span> <span class="st">"perc"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 500 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = boot_out, type = "perc")
+
+Intervals : 
+Level     Percentile     
+95%   ( 0.4370,  0.9705 )  
+Calculations and Intervals on Original Scale</code></pre>
+</div>
+</div>
+<p>Looks like we have a winner. Our confidence interval will necessarily be limited to the range of plausible values.</p>
+<p>But lets look at one other.</p>
+</section>
+<section id="bias-corrected-and-accelerated-bca-confidence-intervals" class="level2">
+<h2 class="anchored" data-anchor-id="bias-corrected-and-accelerated-bca-confidence-intervals">Bias Corrected and Accelerated (BCa) Confidence Intervals</h2>
+<p>BCa intervals require estimating two terms: a bias term and acceleration term.</p>
+<p>Bias is by now a familiar concept, though the calculation for the BCa interval is a little different.</p>
+<p>Estimate the bias correction term, <span class="math inline">\(\hat{z}_0\)</span>, as follows:</p>
+<p><span class="math display">\[
+\hat{z}_0 = \Phi^{-1}\left(\frac{\#\{\hat{\theta}^*_b &lt; \hat{\theta}\}}{B}\right)
+\]</span></p>
+<p>The formula looks complicated but can be thought of as estimating something close to the median bias transformed into normal deviates (<span class="math inline">\(\Phi^{-1}\)</span> is the inverse standard normal cdf).</p>
+<p>The acceleration term is estimated as follows:</p>
+<p><span class="math display">\[
+\hat{a} = \frac{\sum^n_{i=1}(\hat{\theta}_{(\cdot)} - \hat{\theta}_{(i)})}{6\{\sum^n_{i=1}(\hat{\theta}_{(\cdot)} - \hat{\theta}_{(i)})^2\}^{3/2}}
+\]</span></p>
+<p>where <span class="math inline">\(\hat{\theta}_{(\cdot)}\)</span> is the mean of the bootstrap estimates and <span class="math inline">\(\hat{\theta}_{(i)}\)</span> the estimate after deleting the <span class="math inline">\(i\)</span>th case. The process of estimating a statistic <span class="math inline">\(n\)</span> times, each time dropping the <span class="math inline">\(i \in N\)</span> observations, is known as the <em>jackknife</em> estimate.</p>
+<p>The purpose of the acceleration term is to account for situations in which the standard deviation of an estimator changes depending on the true population value. This, by the way, is exactly what happens with the correlation (the SE estimator we provided at the start of the post only works when <span class="math inline">\(r = 0\)</span>). An equivalent way of thinking about this is that it accounts for skew in the sampling distribution, like what we have seen in the prior histograms.</p>
+<p>Armed with our bias correction and acceleration term, we now estimate the quantiles we will use for establishing the confidence limits.</p>
+<p><span class="math display">\[
+\alpha_1 = \Phi\left(\hat{z}_0 + \frac{\hat{z}_0 + z^{(\alpha)}}{1-\hat{a}(\hat{z}_0 + z^{(\alpha)}) } \right)
+\]</span></p>
+<p><span class="math display">\[
+\alpha_2 = \Phi\left(\hat{z}_0 + \frac{\hat{z}_0 + z^{(1 - \alpha)}}{1-\hat{a}(\hat{z}_0 + z^{(1-\alpha)}) } \right)
+\]</span></p>
+<p>where <span class="math inline">\(\alpha\)</span> is our Type-I error rate, usually .05.</p>
+<p>Our confidence limits are:</p>
+<p><span class="math display">\[
+\\
+95\% \text{ CI} = [\hat{\theta}^{*(\alpha_1)}, \hat{\theta}^{*(\alpha_2)}]
+\]</span></p>
+<p>Based on the formulas above, it should be obvious that <span class="math inline">\(a_1\)</span> and <span class="math inline">\(a_2\)</span> reduces to the percentile intervals when the bias and acceleration terms are zero. The bias and acceleration corrections change the percentiles we use to establish our limits.</p>
+<p>If we perform all of the above calculations, we get the following:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boot.ci</span>(boot_out, <span class="at">type =</span> <span class="st">"bca"</span>)<span class="sc">$</span>bca <span class="sc">%&gt;%</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.numeric</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">[</span><span class="st">`</span>(<span class="dv">4</span><span class="sc">:</span><span class="dv">5</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.271 0.944</code></pre>
+</div>
+</div>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>Return to our original questions:</p>
+<ol type="1">
+<li>Why are there multiple CIs? How are they calculated? - Answered</li>
+<li>What are the bootstrap variances needed for studentized intervals? - Answered</li>
+<li>What does it mean that the calculations and intervals are on the original scale? - Not Answered</li>
+<li>Why are some BCa intervals unstable? - Because BCa is known to require a large number of bootstrap samples for accuracy.</li>
+</ol>
+<p>What does it mean that calculations and intervals are on the original scale?</p>
+<p>There are sometimes advantages of transforming a statistic so that it is on a different scale. An example is the correlation coefficient. We mentioned briefly above that the usual way of performing inference is to use the Fisher-<span class="math inline">\(z\)</span> transformation.</p>
+<p><span class="math display">\[
+z = \frac{1}{2}\text{ln}\left(\frac{1+r}{1-r} \right)
+\]</span></p>
+<p>This transformation <em>is</em> normally distributed with standard error <span class="math inline">\(\frac{1}{\sqrt{N - 3}}\)</span>, so we can construct confidence intervals the usual way and then reverse-transform the limits using the inverse of the transformation function.</p>
+<p>The inverse of the transformation function is</p>
+<p><span class="math display">\[
+r = \frac{\text{exp}(2z) - 1}{\text{exp}(2z) + 1}
+\]</span></p>
+<p>If we prefer to work with the transformed statistic, we can include the transformation function and its inverse in the <code>boot.ci</code> function. Define the transformations:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>fisher_z     <span class="ot">&lt;-</span> <span class="cf">function</span>(r) .<span class="dv">5</span><span class="sc">*</span><span class="fu">log</span>((<span class="dv">1</span><span class="sc">+</span>r)<span class="sc">/</span>(<span class="dv">1</span><span class="sc">-</span>r))</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>inv_fisher_z <span class="ot">&lt;-</span> <span class="cf">function</span>(z) (<span class="fu">exp</span>(<span class="dv">2</span><span class="sc">*</span>z)<span class="sc">-</span><span class="dv">1</span>)<span class="sc">/</span>(<span class="fu">exp</span>(<span class="dv">2</span><span class="sc">*</span>z)<span class="sc">+</span><span class="dv">1</span>)  </span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>For some CIs, we also need the first derivative of the transformation function:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">D</span>(<span class="fu">expression</span>(.<span class="dv">5</span><span class="sc">*</span><span class="fu">log</span>((<span class="dv">1</span><span class="sc">+</span>r)<span class="sc">/</span>(<span class="dv">1</span><span class="sc">-</span>r))), <span class="st">"r"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>0.5 * ((1/(1 - r) + (1 + r)/(1 - r)^2)/((1 + r)/(1 - r)))</code></pre>
+</div>
+</div>
+<p>Assign.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>fisher_z_deriv <span class="ot">&lt;-</span> <span class="cf">function</span>(r) {</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>  <span class="fl">0.5</span><span class="sc">*</span>((<span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span> <span class="sc">-</span> r) <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">+</span> r)<span class="sc">/</span>(<span class="dv">1</span> <span class="sc">-</span> r)<span class="sc">^</span><span class="dv">2</span>)<span class="sc">/</span>((<span class="dv">1</span> <span class="sc">+</span> r)<span class="sc">/</span>(<span class="dv">1</span> <span class="sc">-</span> r)))</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Use <code>boot.ci</code>.</p>
+<ul>
+<li>If only the transformation function is applied, the confidence intervals are on the transformed scale.</li>
+<li>If the transformation and the inverse transformation functions are applied, the confidence intervals are calculated on the transformed scale but returned on the original scale.</li>
+<li>If the transformation, inverse transformation, and derivative are supplied, the calculations use the delta method for variance estimation (more consequential if transformation is not normally distributed).</li>
+</ul>
+<p>Compare:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boot.ci</span>(boot_out, <span class="at">type =</span> <span class="fu">c</span>(<span class="st">"norm"</span>, <span class="st">"basic"</span>, <span class="st">"perc"</span>, <span class="st">"bca"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 500 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = boot_out, type = c("norm", "basic", "perc", 
+    "bca"))
+
+Intervals : 
+Level      Normal              Basic         
+95%   ( 0.5107,  1.0479 )   ( 0.5815,  1.1150 )  
+
+Level     Percentile            BCa          
+95%   ( 0.4370,  0.9705 )   ( 0.2714,  0.9439 )  
+Calculations and Intervals on Original Scale
+Some BCa intervals may be unstable</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boot.ci</span>(boot_out, <span class="at">h =</span> fisher_z, </span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">type =</span> <span class="fu">c</span>(<span class="st">"norm"</span>, <span class="st">"basic"</span>, <span class="st">"perc"</span>, <span class="st">"bca"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 500 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = boot_out, type = c("norm", "basic", "perc", 
+    "bca"), h = fisher_z)
+
+Intervals : 
+Level      Normal              Basic         
+95%   ( 0.152,  1.720 )   (-0.030,  1.602 )  
+
+Level     Percentile            BCa          
+95%   ( 0.469,  2.100 )   ( 0.278,  1.773 )  
+Calculations and Intervals on  Transformed Scale
+Some BCa intervals may be unstable</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boot.ci</span>(boot_out, <span class="at">h =</span> fisher_z, <span class="at">hinv =</span> inv_fisher_z, </span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">type =</span> <span class="fu">c</span>(<span class="st">"norm"</span>, <span class="st">"basic"</span>, <span class="st">"perc"</span>, <span class="st">"bca"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 500 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = boot_out, type = c("norm", "basic", "perc", 
+    "bca"), h = fisher_z, hinv = inv_fisher_z)
+
+Intervals : 
+Level      Normal              Basic         
+95%   ( 0.1508,  0.9379 )   (-0.0298,  0.9220 )  
+
+Level     Percentile            BCa          
+95%   ( 0.4370,  0.9705 )   ( 0.2714,  0.9439 )  
+Calculations on Transformed Scale;  Intervals on Original Scale
+Some BCa intervals may be unstable</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">boot.ci</span>(boot_out, <span class="at">h =</span> fisher_z, <span class="at">hinv =</span> inv_fisher_z,</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>        <span class="at">hdot =</span> fisher_z_deriv, </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">type =</span> <span class="fu">c</span>(<span class="st">"norm"</span>, <span class="st">"basic"</span>, <span class="st">"perc"</span>, <span class="st">"bca"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS
+Based on 500 bootstrap replicates
+
+CALL : 
+boot.ci(boot.out = boot_out, type = c("norm", "basic", "perc", 
+    "bca"), h = fisher_z, hdot = fisher_z_deriv, hinv = inv_fisher_z)
+
+Intervals : 
+Level      Normal              Basic         
+95%   ( 0.1508,  0.9379 )   (-0.0298,  0.9220 )  
+
+Level     Percentile            BCa          
+95%   ( 0.4370,  0.9705 )   ( 0.2714,  0.9439 )  
+Calculations on Transformed Scale;  Intervals on Original Scale
+Some BCa intervals may be unstable</code></pre>
+</div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
